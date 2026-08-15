@@ -1,35 +1,57 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { listEvents, listDrinks, createDrink, deleteDrink } from '../lib/adminApi.js';
+import { listDrinks, createDrink, deleteDrink } from '../lib/adminApi.js';
+import { useActiveEvent } from '../hooks/useActiveEvent.js';
+import AdminHeader from '../components/AdminHeader.jsx';
 
 export default function AdminDrinks() {
-  const [eventId, setEventId] = useState(null);
+  const { eventId, loading: eventLoading, error: eventError } = useActiveEvent();
   const [drinks, setDrinks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [drinksLoading, setDrinksLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { register, handleSubmit, reset } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const loading = eventLoading || drinksLoading;
   const formDisabled = submitting || !eventId;
 
   useEffect(() => {
+    if (eventError) {
+      toast.error('Failed to load drinks.');
+    }
+  }, [eventError]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    let cancelled = false;
+
     async function loadDrinks() {
+      setDrinksLoading(true);
       try {
-        const events = await listEvents();
-        const active = events.find((e) => e.isActive);
-        if (!active) {
-          return;
+        const data = await listDrinks(eventId);
+        if (!cancelled) {
+          setDrinks(data);
         }
-        setEventId(active._id);
-        const data = await listDrinks(active._id);
-        setDrinks(data);
       } catch {
-        toast.error('Failed to load drinks.');
+        if (!cancelled) {
+          toast.error('Failed to load drinks.');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setDrinksLoading(false);
+        }
       }
     }
+
     loadDrinks();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
 
   async function onSubmit(values) {
     if (!eventId) {
@@ -66,14 +88,7 @@ export default function AdminDrinks() {
   return (
     <div className="min-h-screen w-full bg-[#1A1310] px-4 py-8 sm:px-6">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <p className="text-sm font-semibold tracking-[0.2em] text-[#F0E3CC]">
-            HANGOVER LOUNGE
-          </p>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-[#9C8F80]">
-            Drinks Management
-          </p>
-        </div>
+        <AdminHeader subtitle="Drinks Management" />
 
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -91,6 +106,9 @@ export default function AdminDrinks() {
                 className="w-full rounded-lg border border-[#453626] bg-[#1A1310] px-3.5 py-3 text-sm text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#9C8F80] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
                 {...register('category', { required: true })}
               />
+              {errors.category && (
+                <span className="text-[11px] text-[#C9A867]">Required</span>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="drink-name" className="sr-only">
@@ -103,6 +121,9 @@ export default function AdminDrinks() {
                 className="w-full rounded-lg border border-[#453626] bg-[#1A1310] px-3.5 py-3 text-sm text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#9C8F80] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
                 {...register('name', { required: true })}
               />
+              {errors.name && (
+                <span className="text-[11px] text-[#C9A867]">Required</span>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="drink-price" className="sr-only">
@@ -118,6 +139,9 @@ export default function AdminDrinks() {
                 className="w-full rounded-lg border border-[#453626] bg-[#1A1310] px-3.5 py-3 text-sm text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#9C8F80] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
                 {...register('price', { required: true })}
               />
+              {errors.price && (
+                <span className="text-[11px] text-[#C9A867]">Required</span>
+              )}
             </div>
             <button
               type="submit"
