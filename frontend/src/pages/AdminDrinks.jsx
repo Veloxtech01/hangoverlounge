@@ -9,6 +9,7 @@ export default function AdminDrinks() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { register, handleSubmit, reset } = useForm();
+  const formDisabled = submitting || !eventId;
 
   useEffect(() => {
     async function loadDrinks() {
@@ -31,6 +32,10 @@ export default function AdminDrinks() {
   }, []);
 
   async function onSubmit(values) {
+    if (!eventId) {
+      toast.error('No active event configured.');
+      return;
+    }
     setSubmitting(true);
     try {
       const drink = await createDrink(eventId, {
@@ -50,8 +55,12 @@ export default function AdminDrinks() {
   }
 
   async function handleDelete(id) {
-    await deleteDrink(id);
-    setDrinks((prev) => prev.filter((d) => d._id !== id));
+    try {
+      await deleteDrink(id);
+      setDrinks((prev) => prev.filter((d) => d._id !== id));
+    } catch {
+      toast.error('Failed to delete drink.');
+    }
   }
 
   return (
@@ -78,7 +87,7 @@ export default function AdminDrinks() {
               <input
                 id="drink-category"
                 placeholder="Category"
-                disabled={submitting}
+                disabled={formDisabled}
                 className="w-full rounded-lg border border-[#453626] bg-[#1A1310] px-3.5 py-3 text-sm text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#9C8F80] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
                 {...register('category', { required: true })}
               />
@@ -90,7 +99,7 @@ export default function AdminDrinks() {
               <input
                 id="drink-name"
                 placeholder="Name"
-                disabled={submitting}
+                disabled={formDisabled}
                 className="w-full rounded-lg border border-[#453626] bg-[#1A1310] px-3.5 py-3 text-sm text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#9C8F80] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
                 {...register('name', { required: true })}
               />
@@ -105,14 +114,14 @@ export default function AdminDrinks() {
                 type="number"
                 inputMode="numeric"
                 min="0"
-                disabled={submitting}
+                disabled={formDisabled}
                 className="w-full rounded-lg border border-[#453626] bg-[#1A1310] px-3.5 py-3 text-sm text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#9C8F80] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
                 {...register('price', { required: true })}
               />
             </div>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={formDisabled}
               className="cursor-pointer rounded-full border border-[#6B5842] bg-[#453626] px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#F0E3CC] transition-colors duration-200 hover:bg-[#54432f] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? 'Adding…' : 'Add drink'}
@@ -122,6 +131,10 @@ export default function AdminDrinks() {
 
         {loading ? (
           <p className="text-center text-sm text-[#9C8F80]">Loading drinks…</p>
+        ) : !eventId ? (
+          <p className="text-center text-sm text-[#9C8F80]">
+            No active event configured.
+          </p>
         ) : (
           <div className="rounded-2xl border border-[#453626] bg-[#241A15] p-5">
             {drinks.length === 0 ? (
