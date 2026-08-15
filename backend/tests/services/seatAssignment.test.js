@@ -33,6 +33,17 @@ describe('redeemCode', () => {
     expect(assignedCount).toBe(1);
   });
 
+  it('never double-assigns a seat when the same fresh code is redeemed concurrently', async () => {
+    const { event } = await makeEventWithPool(5, 1);
+    const [first, second] = await Promise.all([
+      redeemCode(event._id, 'CODE1'),
+      redeemCode(event._id, 'CODE1'),
+    ]);
+    expect(second.seatNumber).toBe(first.seatNumber);
+    const assignedCount = await Seat.countDocuments({ event: event._id, status: 'assigned' });
+    expect(assignedCount).toBe(1);
+  });
+
   it('throws CODE_NOT_FOUND for an unrecognized code', async () => {
     const { event } = await makeEventWithPool(5, 1);
     await expect(redeemCode(event._id, 'NOPE')).rejects.toMatchObject({ code: 'CODE_NOT_FOUND' });
