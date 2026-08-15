@@ -16,3 +16,17 @@ export async function getSeats(eventId) {
   const { data } = await api.get(`/api/admin/events/${eventId}/seats`);
   return data;
 }
+
+export async function listDrinks(eventId) {
+  const { data } = await api.get(`/api/admin/events/${eventId}/drinks`);
+  return data;
+}
+
+export async function createDrink(eventId, drink) {
+  const { data } = await api.post(`/api/admin/events/${eventId}/drinks`, drink);
+  return data;
+}
+
+export async function deleteDrink(id) {
+  await api.delete(`/api/admin/drinks/${id}`);
+}
