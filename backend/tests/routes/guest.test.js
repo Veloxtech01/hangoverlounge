@@ -52,5 +52,6 @@ describe('POST /api/guest/redeem', () => {
     const res = await request(app).post('/api/guest/redeem').send({ code: 'ANY' });
     expect(res.status).toBe(503);
     expect(res.body.error.code).toBe('NO_ACTIVE_EVENT');
+    expect(res.body.error.message).toBe('No event is open for check-in right now.');
   });
 });

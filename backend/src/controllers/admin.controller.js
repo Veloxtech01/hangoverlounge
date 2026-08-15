@@ -20,9 +20,11 @@ export async function createEvent(req, res, next) {
 
 export async function activateEvent(req, res, next) {
   try {
-    await Event.updateMany({}, { isActive: false });
-    const event = await Event.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+    const event = await Event.findById(req.params.id);
     if (!event) throw new ApiError(404, 'EVENT_NOT_FOUND', 'Event not found.');
+    await Event.updateMany({ _id: { $ne: event._id } }, { isActive: false });
+    event.isActive = true;
+    await event.save();
     res.json({ id: event._id, isActive: event.isActive });
   } catch (err) {
     next(err);

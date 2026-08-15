@@ -57,4 +57,18 @@ describe('Admin events API', () => {
     expect((await Event.findById(a._id)).isActive).toBe(false);
     expect((await Event.findById(b._id)).isActive).toBe(true);
   });
+
+  it('activating a nonexistent event id returns 404 and leaves the active event untouched', async () => {
+    const app = createApp();
+    const token = await adminToken(app);
+    const a = await Event.create({ name: 'A', eventDate: new Date(), venue: 'V', isActive: true });
+    const nonexistentButValidId = '507f1f77bcf86cd799439011';
+
+    const res = await request(app)
+      .post(`/api/admin/events/${nonexistentButValidId}/activate`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+    expect((await Event.findById(a._id)).isActive).toBe(true);
+  });
 });

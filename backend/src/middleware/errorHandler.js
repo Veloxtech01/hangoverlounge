@@ -7,14 +7,14 @@ export class ApiError extends Error {
 }
 
 export function errorHandler(err, req, res, next) {
-  const status = err.status || 500;
-  if (status >= 500) {
-    (req.log || console).error({ err }, 'unhandled error');
+  if (err instanceof ApiError) {
+    res.status(err.status).json({
+      error: { code: err.code, message: err.message },
+    });
+    return;
   }
-  res.status(status).json({
-    error: {
-      code: err.code || 'INTERNAL_ERROR',
-      message: status >= 500 ? 'Something went wrong.' : err.message,
-    },
+  (req.log || console).error({ err }, 'unhandled error');
+  res.status(500).json({
+    error: { code: 'INTERNAL_ERROR', message: 'Something went wrong.' },
   });
 }
