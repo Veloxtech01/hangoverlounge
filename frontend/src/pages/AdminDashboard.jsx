@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { listEvents, getSeats } from '../lib/adminApi.js';
 import SeatGrid from '../components/SeatGrid.jsx';
 
@@ -7,17 +8,22 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    listEvents().then((events) => {
-      const active = events.find((e) => e.isActive);
-      if (!active) {
-        setLoading(false);
-        return;
-      }
-      getSeats(active._id).then((data) => {
+    async function loadSeats() {
+      try {
+        const events = await listEvents();
+        const active = events.find((e) => e.isActive);
+        if (!active) {
+          return;
+        }
+        const data = await getSeats(active._id);
         setSeats(data);
+      } catch {
+        toast.error('Failed to load seat status.');
+      } finally {
         setLoading(false);
-      });
-    });
+      }
+    }
+    loadSeats();
   }, []);
 
   const assignedCount = seats.filter((s) => s.status === 'assigned').length;
