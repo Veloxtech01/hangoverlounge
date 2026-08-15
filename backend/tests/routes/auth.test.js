@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import { startTestDb, stopTestDb, clearTestDb } from '../helpers/db.js';
 import { createApp } from '../../src/app.js';
 import { env } from '../../src/config/env.js';
+
+beforeAll(startTestDb, 30000);
+afterAll(stopTestDb);
+afterEach(clearTestDb);
 
 describe('POST /api/admin/auth/login', () => {
   it('returns a token for the correct password', async () => {
@@ -21,7 +26,7 @@ describe('POST /api/admin/auth/login', () => {
   });
 });
 
-describe.skip('requireAdmin middleware (via a protected admin route)', () => {
+describe('requireAdmin middleware (via a protected admin route)', () => {
   it('rejects requests with no token', async () => {
     const app = createApp();
     const res = await request(app).get('/api/admin/events');

@@ -7,6 +7,7 @@ import { requestId } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { guestRouter } from './routes/guest.routes.js';
 import { authRouter } from './routes/auth.routes.js';
+import { adminRouter } from './routes/admin.routes.js';
 
 export function createApp() {
   const app = express();
@@ -21,6 +22,7 @@ export function createApp() {
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/api/guest', guestRouter);
   app.use('/api/admin/auth', authRouter);
+  app.use('/api/admin', adminRouter);
 
   app.use(errorHandler);
   return app;
