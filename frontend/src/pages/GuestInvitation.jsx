@@ -1,15 +1,28 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { motion } from 'motion/react';
+
+const MotionCard = motion.div;
 
 function formatEventDate(value) {
   if (!value) return null;
   const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
   const date = new Date(isDateOnly ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-US', {
+  if (isDateOnly) {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+  return date.toLocaleString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 
@@ -58,7 +71,11 @@ export default function GuestInvitation() {
           Liquid Therapy
         </p>
 
-        <div className="w-full overflow-hidden rounded-2xl border border-[#453626] bg-[#241A15] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)]">
+        <MotionCard
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="w-full overflow-hidden rounded-2xl border border-[#453626] bg-[#241A15] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)]">
           <div className="flex flex-col items-center gap-1.5 px-6 pt-7 pb-6 text-center">
             <p className="text-[10px] uppercase tracking-[0.3em] text-[#9C8F80]">
               You&rsquo;re Invited To
@@ -101,9 +118,9 @@ export default function GuestInvitation() {
               Drinks On The House
             </p>
             <ul className="flex flex-col gap-3">
-              {drinks.map((drink) => (
+              {drinks.map((drink, index) => (
                 <li
-                  key={drink.name}
+                  key={`${drink.category ?? ''}-${drink.name}-${drink.price}-${index}`}
                   className="flex items-center justify-between gap-3 border-b border-[#453626]/60 pb-3 last:border-b-0 last:pb-0"
                 >
                   <div className="flex min-w-0 flex-col">
@@ -123,7 +140,7 @@ export default function GuestInvitation() {
               ))}
             </ul>
           </div>
-        </div>
+        </MotionCard>
 
         <p className="mt-6 text-[11px] tracking-wide text-[#6B5842]">
           Screenshot this page and show it at the door.
