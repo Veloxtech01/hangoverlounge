@@ -5,6 +5,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { requestId } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { guestRouter } from './routes/guest.routes.js';
 
 export function createApp() {
   const app = express();
@@ -17,6 +18,7 @@ export function createApp() {
   app.use(rateLimit({ windowMs: 60_000, max: 60 }));
 
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+  app.use('/api/guest', guestRouter);
 
   app.use(errorHandler);
   return app;
