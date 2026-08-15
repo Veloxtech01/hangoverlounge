@@ -157,7 +157,7 @@ export default function AdminDrinks() {
           <p className="text-center text-sm text-[#9C8F80]">Loading drinks…</p>
         ) : !eventId ? (
           <p className="text-center text-sm text-[#9C8F80]">
-            No active event configured.
+            {eventError ? 'Failed to load event data.' : 'No active event configured.'}
           </p>
         ) : (
           <div className="rounded-2xl border border-[#453626] bg-[#241A15] p-5">
