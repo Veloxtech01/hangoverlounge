@@ -2,6 +2,7 @@ import { Event } from '../models/Event.js';
 import { Seat } from '../models/Seat.js';
 import { Code } from '../models/Code.js';
 import { createSeatPool, createCodes, generateUniqueCodes } from '../services/eventSetup.service.js';
+import { unassignSeat as unassignSeatService } from '../services/seatAssignment.service.js';
 import { ApiError } from '../middleware/errorHandler.js';
 
 const DEFAULT_CODE_COUNT = 100;
@@ -54,6 +55,19 @@ export async function seatStatus(req, res, next) {
       status: s.status,
       code: s.code?.code || null,
     })));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function unassignSeat(req, res, next) {
+  try {
+    const seatNumber = Number(req.params.seatNumber);
+    if (!Number.isInteger(seatNumber) || seatNumber < 1 || seatNumber > 100) {
+      throw new ApiError(400, 'INVALID_SEAT_NUMBER', 'seatNumber must be an integer between 1 and 100.');
+    }
+    const result = await unassignSeatService(req.params.eventId, seatNumber);
+    res.json({ seatNumber: result.seatNumber, status: 'available' });
   } catch (err) {
     next(err);
   }

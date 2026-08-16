@@ -1,4 +1,4 @@
-export default function SeatGrid({ seats }) {
+export default function SeatGrid({ seats, onSeatClick, pendingSeatNumber }) {
   return (
     <div
       role="list"
@@ -7,18 +7,10 @@ export default function SeatGrid({ seats }) {
     >
       {seats.map((seat) => {
         const isAssigned = seat.status === 'assigned';
-        return (
-          <div
-            key={seat.seatNumber}
-            data-status={seat.status}
-            role="listitem"
-            aria-label={`Seat ${String(seat.seatNumber).padStart(3, '0')} — ${seat.status}`}
-            className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-md border text-[11px] font-semibold tabular-nums transition-colors duration-200 ${
-              isAssigned
-                ? 'border-[#C9A867] bg-[#453626] text-[#F0E3CC] shadow-[0_0_10px_-2px_rgba(201,168,103,0.6)]'
-                : 'border-[#453626] bg-[#241A15] text-[#9C8F80]'
-            }`}
-          >
+        const isPending = seat.seatNumber === pendingSeatNumber;
+        const label = String(seat.seatNumber).padStart(3, '0');
+        const tileContent = (
+          <>
             {isAssigned && (
               <svg
                 aria-hidden="true"
@@ -33,7 +25,32 @@ export default function SeatGrid({ seats }) {
                 <path d="M20 6L9 17l-5-5" />
               </svg>
             )}
-            {String(seat.seatNumber).padStart(3, '0')}
+            {label}
+          </>
+        );
+        const tileClasses = `flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-md border text-[11px] font-semibold tabular-nums transition-colors duration-200 ${
+          isAssigned
+            ? 'border-[#C9A867] bg-[#453626] text-[#F0E3CC] shadow-[0_0_10px_-2px_rgba(201,168,103,0.6)]'
+            : 'border-[#453626] bg-[#241A15] text-[#9C8F80]'
+        }`;
+
+        return (
+          <div key={seat.seatNumber} data-status={seat.status} role="listitem">
+            {isAssigned ? (
+              <button
+                type="button"
+                onClick={() => onSeatClick?.(seat.seatNumber)}
+                disabled={isPending}
+                aria-label={`Seat ${label} — assigned. Tap to unassign.`}
+                className={`${tileClasses} cursor-pointer hover:bg-[#54432f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A867]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A1310] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100`}
+              >
+                {tileContent}
+              </button>
+            ) : (
+              <div aria-label={`Seat ${label} — available`} className={tileClasses}>
+                {tileContent}
+              </div>
+            )}
           </div>
         );
       })}

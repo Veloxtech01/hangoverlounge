@@ -3,7 +3,8 @@ import { startTestDb, stopTestDb, clearTestDb } from '../helpers/db.js';
 import { Event } from '../../src/models/Event.js';
 import { Seat } from '../../src/models/Seat.js';
 import { createSeatPool, createCodes } from '../../src/services/eventSetup.service.js';
-import { redeemCode } from '../../src/services/seatAssignment.service.js';
+import { redeemCode, unassignSeat } from '../../src/services/seatAssignment.service.js';
+import { Code } from '../../src/models/Code.js';
 
 beforeAll(startTestDb, 30000);
 afterAll(stopTestDb);
@@ -61,5 +62,50 @@ describe('redeemCode', () => {
     const { event, codes } = await makeEventWithPool(2, 3);
     await Promise.all(codes.slice(0, 2).map((c) => redeemCode(event._id, c)));
     await expect(redeemCode(event._id, codes[2])).rejects.toMatchObject({ code: 'SEATS_FULL' });
+  });
+});
+
+describe('unassignSeat', () => {
+  it('frees the seat and clears the code on success', async () => {
+    const { event } = await makeEventWithPool(5, 1);
+    const { seatNumber } = await redeemCode(event._id, 'CODE1');
+
+    await unassignSeat(event._id, seatNumber);
+
+    const seat = await Seat.findOne({ event: event._id, seatNumber });
+    expect(seat.status).toBe('available');
+    expect(seat.code).toBeNull();
+
+    const code = await Code.findOne({ event: event._id, code: 'CODE1' });
+    expect(code.seatNumber).toBeNull();
+    expect(code.assignedAt).toBeNull();
+  });
+
+  it('throws SEAT_NOT_ASSIGNED for an already-available seat', async () => {
+    const { event } = await makeEventWithPool(5, 1);
+    await expect(unassignSeat(event._id, 1)).rejects.toMatchObject({ code: 'SEAT_NOT_ASSIGNED' });
+  });
+
+  it('throws SEAT_NOT_FOUND for a nonexistent seat number', async () => {
+    const { event } = await makeEventWithPool(5, 1);
+    await expect(unassignSeat(event._id, 99)).rejects.toMatchObject({ code: 'SEAT_NOT_FOUND' });
+  });
+
+  it('only lets one of two concurrent unassign calls succeed', async () => {
+    const { event } = await makeEventWithPool(5, 1);
+    const { seatNumber } = await redeemCode(event._id, 'CODE1');
+
+    const results = await Promise.allSettled([
+      unassignSeat(event._id, seatNumber),
+      unassignSeat(event._id, seatNumber),
+    ]);
+    const fulfilled = results.filter((r) => r.status === 'fulfilled');
+    const rejected = results.filter((r) => r.status === 'rejected');
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].reason).toMatchObject({ code: 'SEAT_NOT_ASSIGNED' });
+
+    const assignedCount = await Seat.countDocuments({ event: event._id, status: 'assigned' });
+    expect(assignedCount).toBe(0);
   });
 });

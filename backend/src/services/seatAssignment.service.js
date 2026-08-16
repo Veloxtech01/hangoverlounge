@@ -45,3 +45,37 @@ export async function redeemCode(eventId, rawCode) {
     await session.endSession();
   }
 }
+
+export async function unassignSeat(eventId, seatNumber) {
+  const session = await mongoose.startSession();
+  try {
+    let result;
+    await session.withTransaction(async () => {
+      const seat = await Seat.findOneAndUpdate(
+        { event: eventId, seatNumber, status: 'assigned' },
+        { $set: { status: 'available', code: null } },
+        { session }
+      );
+
+      if (!seat) {
+        const existing = await Seat.findOne({ event: eventId, seatNumber }).session(session);
+        if (!existing) {
+          throw new ApiError(404, 'SEAT_NOT_FOUND', 'Seat not found.');
+        }
+        throw new ApiError(409, 'SEAT_NOT_ASSIGNED', 'Seat is not currently assigned.');
+      }
+
+      if (seat.code) {
+        await Code.updateOne(
+          { _id: seat.code },
+          { $set: { seatNumber: null, assignedAt: null } },
+          { session }
+        );
+      }
+      result = { seatNumber: seat.seatNumber };
+    });
+    return result;
+  } finally {
+    await session.endSession();
+  }
+}

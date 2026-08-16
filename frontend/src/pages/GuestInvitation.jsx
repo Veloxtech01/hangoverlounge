@@ -1,5 +1,5 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { Navigate, useLocation } from "react-router-dom";
+import { motion } from "motion/react";
 
 const MotionCard = motion.div;
 
@@ -9,22 +9,22 @@ function formatEventDate(value) {
   const date = new Date(isDateOnly ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
   if (isDateOnly) {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   }
-  return date.toLocaleString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'Africa/Lagos',
-    timeZoneName: 'short',
+  return date.toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Africa/Lagos",
+    timeZoneName: "short",
   });
 }
 
@@ -36,7 +36,7 @@ export default function GuestInvitation() {
   }
 
   const { event, seatNumber, drinks } = state;
-  const seatLabel = String(seatNumber).padStart(3, '0');
+  const seatLabel = String(seatNumber).padStart(3, "0");
   const formattedDate = formatEventDate(event.eventDate);
 
   return (
@@ -76,8 +76,9 @@ export default function GuestInvitation() {
         <MotionCard
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="w-full overflow-hidden rounded-2xl border border-[#453626] bg-[#241A15] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)]">
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="w-full overflow-hidden rounded-2xl border border-[#453626] bg-[#241A15] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)]"
+        >
           <div className="flex flex-col items-center gap-1.5 px-6 pt-7 pb-6 text-center">
             <p className="text-[10px] uppercase tracking-[0.3em] text-[#9C8F80]">
               You&rsquo;re Invited To
@@ -117,12 +118,12 @@ export default function GuestInvitation() {
 
           <div className="flex flex-col gap-3 px-6 py-6 text-left">
             <p className="text-center text-xs uppercase tracking-[0.3em] text-[#9C8F80]">
-              Drinks On The House
+              Drinks On The Menu
             </p>
             <ul className="flex flex-col gap-3">
               {drinks.map((drink, index) => (
                 <li
-                  key={`${drink.category ?? ''}-${drink.name}-${drink.price}-${index}`}
+                  key={`${drink.category ?? ""}-${drink.name}-${drink.price}-${index}`}
                   className="flex items-center justify-between gap-3 border-b border-[#453626]/60 pb-3 last:border-b-0 last:pb-0"
                 >
                   <div className="flex min-w-0 flex-col">

@@ -17,6 +17,11 @@ export async function getSeats(eventId) {
   return data;
 }
 
+export async function unassignSeat(eventId, seatNumber) {
+  const { data } = await api.post(`/api/admin/events/${eventId}/seats/${seatNumber}/unassign`);
+  return data;
+}
+
 export async function listDrinks(eventId) {
   const { data } = await api.get(`/api/admin/events/${eventId}/drinks`);
   return data;

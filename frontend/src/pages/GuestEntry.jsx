@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { redeemCode } from '../lib/guestApi.js';
 
@@ -87,6 +87,13 @@ export default function GuestEntry() {
             {submitting ? 'Checking…' : 'Enter'}
           </button>
         </form>
+
+        <Link
+          to="/admin/login"
+          className="mt-10 text-[10px] uppercase tracking-[0.3em] text-[#6B5842] transition-colors duration-200 hover:text-[#9C8F80]"
+        >
+          Admin
+        </Link>
       </div>
     </div>
   );

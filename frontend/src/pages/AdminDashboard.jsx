@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getSeats } from '../lib/adminApi.js';
+import { getSeats, unassignSeat } from '../lib/adminApi.js';
 import { useActiveEvent } from '../hooks/useActiveEvent.js';
 import SeatGrid from '../components/SeatGrid.jsx';
 import AdminHeader from '../components/AdminHeader.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
 
 export default function AdminDashboard() {
   const { eventId, loading: eventLoading, error: eventError } = useActiveEvent();
   const [seats, setSeats] = useState([]);
   const [seatsLoading, setSeatsLoading] = useState(false);
   const [seatsError, setSeatsError] = useState(false);
+  const [pendingUnassign, setPendingUnassign] = useState(null);
+  const [unassigning, setUnassigning] = useState(null);
 
   useEffect(() => {
     if (eventError) {
@@ -51,6 +54,33 @@ export default function AdminDashboard() {
   const totalCount = seats.length;
   const percentAssigned = totalCount ? Math.round((assignedCount / totalCount) * 100) : 0;
   const hasActiveEvent = Boolean(eventId);
+  const pendingSeat = seats.find((s) => s.seatNumber === pendingUnassign) || null;
+
+  async function handleConfirmUnassign() {
+    const seatNumber = pendingUnassign;
+    setUnassigning(seatNumber);
+    try {
+      await unassignSeat(eventId, seatNumber);
+      setSeats((prev) =>
+        prev.map((s) => (s.seatNumber === seatNumber ? { ...s, status: 'available', code: null } : s))
+      );
+      toast.success(`Seat ${String(seatNumber).padStart(3, '0')} unassigned.`);
+    } catch (err) {
+      if (err.response?.data?.error?.code === 'SEAT_NOT_ASSIGNED') {
+        toast.error('That seat had already changed — refreshing seat status.');
+        try {
+          setSeats(await getSeats(eventId));
+        } catch {
+          toast.error('Failed to refresh seat status.');
+        }
+      } else {
+        toast.error('Failed to unassign seat.');
+      }
+    } finally {
+      setUnassigning(null);
+      setPendingUnassign(null);
+    }
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#1A1310] px-4 py-8 sm:px-6">
@@ -98,11 +128,25 @@ export default function AdminDashboard() {
             ) : seatsError ? (
               <p className="text-center text-sm text-[#9C8F80]">Failed to load seat status.</p>
             ) : (
-              <SeatGrid seats={seats} />
+              <SeatGrid seats={seats} onSeatClick={setPendingUnassign} pendingSeatNumber={unassigning} />
             )}
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        open={pendingUnassign !== null}
+        title={`Unassign seat ${pendingSeat ? String(pendingSeat.seatNumber).padStart(3, '0') : ''}?`}
+        message={
+          pendingSeat?.code
+            ? `This frees seat ${String(pendingSeat.seatNumber).padStart(3, '0')} and lets code ${pendingSeat.code} be redeemed again for a new seat.`
+            : 'This frees the seat so it can be assigned again.'
+        }
+        confirmLabel="Unassign"
+        onConfirm={handleConfirmUnassign}
+        onCancel={() => setPendingUnassign(null)}
+        isConfirming={unassigning !== null}
+      />
     </div>
   );
 }
