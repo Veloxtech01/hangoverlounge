@@ -31,6 +31,9 @@ export default function AdminHeader({ subtitle }) {
         <NavLink to="/admin/drinks" className={navLinkClasses}>
           Drinks
         </NavLink>
+        <NavLink to="/admin/codes" className={navLinkClasses}>
+          Codes
+        </NavLink>
         <button
           type="button"
           onClick={handleLogout}

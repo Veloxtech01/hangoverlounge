@@ -1,5 +1,6 @@
 import { Event } from '../models/Event.js';
 import { Seat } from '../models/Seat.js';
+import { Code } from '../models/Code.js';
 import { createSeatPool, createCodes } from '../services/eventSetup.service.js';
 import { ApiError } from '../middleware/errorHandler.js';
 
@@ -49,6 +50,19 @@ export async function seatStatus(req, res, next) {
       seatNumber: s.seatNumber,
       status: s.status,
       code: s.code?.code || null,
+    })));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listCodes(req, res, next) {
+  try {
+    const codes = await Code.find({ event: req.params.eventId }).sort({ code: 1 });
+    res.json(codes.map((c) => ({
+      code: c.code,
+      seatNumber: c.seatNumber,
+      redeemedAt: c.assignedAt,
     })));
   } catch (err) {
     next(err);

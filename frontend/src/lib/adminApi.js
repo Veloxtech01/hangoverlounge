@@ -30,3 +30,8 @@ export async function createDrink(eventId, drink) {
 export async function deleteDrink(id) {
   await api.delete(`/api/admin/drinks/${id}`);
 }
+
+export async function getCodes(eventId) {
+  const { data } = await api.get(`/api/admin/events/${eventId}/codes`);
+  return data;
+}
