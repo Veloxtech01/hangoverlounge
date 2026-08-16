@@ -13,39 +13,39 @@ async function adminToken(app) {
   return res.body.token;
 }
 
-async function createEventWithCodes(app, token, codes) {
+async function createEventWithGeneratedCodes(app, token, codeCount) {
   const res = await request(app)
     .post('/api/admin/events')
     .set('Authorization', `Bearer ${token}`)
-    .send({ name: 'Test Event', eventDate: new Date(), venue: 'V', codes });
-  return res.body.id;
+    .send({ name: 'Test Event', eventDate: new Date(), venue: 'V', codeCount });
+  return { eventId: res.body.id, codes: res.body.codes };
 }
 
 describe('Admin codes API', () => {
   it('lists all codes for an event, sorted, with redemption status', async () => {
     const app = createApp();
     const token = await adminToken(app);
-    const eventId = await createEventWithCodes(app, token, ['HL002', 'HL001']);
+    const { eventId, codes } = await createEventWithGeneratedCodes(app, token, 2);
 
     const res = await request(app)
       .get(`/api/admin/events/${eventId}/codes`)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([
-      { code: 'HL001', seatNumber: null, redeemedAt: null },
-      { code: 'HL002', seatNumber: null, redeemedAt: null },
-    ]);
+    expect(res.body).toEqual(
+      [...codes].sort().map((code) => ({ code, seatNumber: null, redeemedAt: null }))
+    );
   });
 
   it('reflects a redeemed code with its seat number and timestamp', async () => {
     const app = createApp();
     const token = await adminToken(app);
-    const eventId = await createEventWithCodes(app, token, ['HL001']);
+    const { eventId, codes } = await createEventWithGeneratedCodes(app, token, 1);
+    const [code] = codes;
     await request(app)
       .post(`/api/admin/events/${eventId}/activate`)
       .set('Authorization', `Bearer ${token}`);
-    await request(app).post('/api/guest/redeem').send({ code: 'HL001' });
+    await request(app).post('/api/guest/redeem').send({ code });
 
     const res = await request(app)
       .get(`/api/admin/events/${eventId}/codes`)
@@ -53,7 +53,7 @@ describe('Admin codes API', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
-    expect(res.body[0].code).toBe('HL001');
+    expect(res.body[0].code).toBe(code);
     expect(res.body[0].seatNumber).toBe(1);
     expect(res.body[0].redeemedAt).not.toBeNull();
   });

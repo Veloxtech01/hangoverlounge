@@ -3,7 +3,7 @@ import { startTestDb, stopTestDb, clearTestDb } from '../helpers/db.js';
 import { Event } from '../../src/models/Event.js';
 import { Seat } from '../../src/models/Seat.js';
 import { Code } from '../../src/models/Code.js';
-import { createSeatPool, createCodes } from '../../src/services/eventSetup.service.js';
+import { createSeatPool, createCodes, generateUniqueCodes } from '../../src/services/eventSetup.service.js';
 
 beforeAll(startTestDb, 30000);
 afterAll(stopTestDb);
@@ -34,5 +34,26 @@ describe('eventSetup.service', () => {
     const event = await makeEvent();
     await createCodes(event._id, ['DUP1']);
     await expect(createCodes(event._id, ['DUP1'])).rejects.toThrow();
+  });
+});
+
+describe('generateUniqueCodes', () => {
+  it('generates the requested count of unique 6-digit numeric codes', () => {
+    const codes = generateUniqueCodes(100);
+    expect(codes).toHaveLength(100);
+    expect(new Set(codes).size).toBe(100);
+    for (const code of codes) {
+      expect(code).toMatch(/^\d{6}$/);
+    }
+  });
+
+  it('generates different codes across calls (not sequential/predictable)', () => {
+    const a = generateUniqueCodes(100);
+    const b = generateUniqueCodes(100);
+    expect(a).not.toEqual(b);
+  });
+
+  it('throws if asked for more codes than the space allows', () => {
+    expect(() => generateUniqueCodes(1_000_001)).toThrow();
   });
 });

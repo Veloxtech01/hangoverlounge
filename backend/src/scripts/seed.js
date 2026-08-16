@@ -1,6 +1,6 @@
 import { connectDb, disconnectDb } from '../config/db.js';
 import { Event } from '../models/Event.js';
-import { createSeatPool, createCodes } from '../services/eventSetup.service.js';
+import { createSeatPool, createCodes, generateUniqueCodes } from '../services/eventSetup.service.js';
 import { Drink } from '../models/Drink.js';
 
 const DRINKS = [
@@ -13,10 +13,6 @@ const DRINKS = [
   { category: 'Champagne & Sparkling', name: 'Moët Rosé', price: 300000 },
 ];
 
-function generateDevCodes(count) {
-  return Array.from({ length: count }, (_, i) => `HL${String(i + 1).padStart(3, '0')}`);
-}
-
 async function main() {
   await connectDb();
   await Event.updateMany({}, { isActive: false });
@@ -28,7 +24,8 @@ async function main() {
     isActive: true,
   });
   await createSeatPool(event._id, 100);
-  await createCodes(event._id, generateDevCodes(100));
+  const codes = generateUniqueCodes(100);
+  await createCodes(event._id, codes);
   await Drink.insertMany(DRINKS.map((d, i) => ({ ...d, event: event._id, order: i })));
   console.log(`Seeded event ${event._id} with 100 codes/seats and ${DRINKS.length} drinks.`);
   await disconnectDb();

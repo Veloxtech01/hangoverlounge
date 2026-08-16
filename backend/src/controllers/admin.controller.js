@@ -1,19 +1,22 @@
 import { Event } from '../models/Event.js';
 import { Seat } from '../models/Seat.js';
 import { Code } from '../models/Code.js';
-import { createSeatPool, createCodes } from '../services/eventSetup.service.js';
+import { createSeatPool, createCodes, generateUniqueCodes } from '../services/eventSetup.service.js';
 import { ApiError } from '../middleware/errorHandler.js';
+
+const DEFAULT_CODE_COUNT = 100;
 
 export async function createEvent(req, res, next) {
   try {
-    const { name, tagline, eventDate, venue, codes } = req.body;
-    if (!Array.isArray(codes) || codes.length === 0) {
-      throw new ApiError(400, 'CODES_REQUIRED', 'Provide the list of invitation codes.');
+    const { name, tagline, eventDate, venue, codeCount = DEFAULT_CODE_COUNT } = req.body;
+    if (!Number.isInteger(codeCount) || codeCount < 1) {
+      throw new ApiError(400, 'INVALID_CODE_COUNT', 'codeCount must be a positive integer.');
     }
     const event = await Event.create({ name, tagline, eventDate, venue, isActive: false });
     await createSeatPool(event._id, 100);
+    const codes = generateUniqueCodes(codeCount);
     await createCodes(event._id, codes);
-    res.status(201).json({ id: event._id });
+    res.status(201).json({ id: event._id, codes });
   } catch (err) {
     next(err);
   }
