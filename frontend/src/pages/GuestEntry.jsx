@@ -73,8 +73,9 @@ export default function GuestEntry() {
               onChange={(e) => setCode(e.target.value)}
               disabled={submitting}
               autoComplete="off"
-              autoCapitalize="characters"
-              placeholder="e.g. HL001"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="e.g. 048213"
               className="w-full rounded-lg border border-[#453626] bg-[#241A15] px-4 py-3.5 text-base tracking-widest text-[#F0E3CC] outline-none transition-colors duration-200 placeholder:text-[#6B5842] focus:border-[#6B5842] focus:ring-2 focus:ring-[#6B5842]/60 disabled:opacity-50"
             />
           </div>
