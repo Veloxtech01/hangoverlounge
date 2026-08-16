@@ -32,6 +32,12 @@ describe('routing', () => {
     expect(screen.getByLabelText(/admin password/i)).toBeInTheDocument();
   });
 
+  it('guards /admin/events the same way as /admin', () => {
+    vi.spyOn(adminAuth, 'isAuthenticated').mockReturnValue(false);
+    render(<RouterProvider router={testRouter('/admin/events')} />);
+    expect(screen.getByLabelText(/admin password/i)).toBeInTheDocument();
+  });
+
   it('renders GuestInvitation at /invitation when given guest state', () => {
     const router = createMemoryRouter(routes, {
       initialEntries: [

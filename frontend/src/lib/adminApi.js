@@ -35,3 +35,13 @@ export async function getCodes(eventId) {
   const { data } = await api.get(`/api/admin/events/${eventId}/codes`);
   return data;
 }
+
+export async function createEvent(payload) {
+  const { data } = await api.post('/api/admin/events', payload);
+  return data;
+}
+
+export async function activateEvent(eventId) {
+  const { data } = await api.post(`/api/admin/events/${eventId}/activate`);
+  return data;
+}

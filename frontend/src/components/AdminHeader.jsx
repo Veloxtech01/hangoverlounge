@@ -28,6 +28,9 @@ export default function AdminHeader({ subtitle }) {
         <NavLink to="/admin" end className={navLinkClasses}>
           Dashboard
         </NavLink>
+        <NavLink to="/admin/events" className={navLinkClasses}>
+          Events
+        </NavLink>
         <NavLink to="/admin/drinks" className={navLinkClasses}>
           Drinks
         </NavLink>
