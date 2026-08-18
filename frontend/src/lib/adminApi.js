@@ -12,16 +12,6 @@ export async function listEvents() {
   return data;
 }
 
-export async function getSeats(eventId) {
-  const { data } = await api.get(`/api/admin/events/${eventId}/seats`);
-  return data;
-}
-
-export async function unassignSeat(eventId, seatNumber) {
-  const { data } = await api.post(`/api/admin/events/${eventId}/seats/${seatNumber}/unassign`);
-  return data;
-}
-
 export async function listDrinks(eventId) {
   const { data } = await api.get(`/api/admin/events/${eventId}/drinks`);
   return data;
@@ -34,11 +24,6 @@ export async function createDrink(eventId, drink) {
 
 export async function deleteDrink(id) {
   await api.delete(`/api/admin/drinks/${id}`);
-}
-
-export async function getCodes(eventId) {
-  const { data } = await api.get(`/api/admin/events/${eventId}/codes`);
-  return data;
 }
 
 export async function createEvent(payload) {
