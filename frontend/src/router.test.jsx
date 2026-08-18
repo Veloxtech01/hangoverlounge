@@ -3,15 +3,18 @@ import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './router.jsx';
 import * as adminAuth from './lib/adminAuth.js';
+import { getTableInvitation } from './lib/guestApi.js';
+
+vi.mock('./lib/guestApi.js', () => ({ getTableInvitation: vi.fn() }));
 
 function testRouter(initialPath) {
   return createMemoryRouter(routes, { initialEntries: [initialPath] });
 }
 
 describe('routing', () => {
-  it('renders the guest entry form at /', () => {
+  it('renders the scan prompt at /', () => {
     render(<RouterProvider router={testRouter('/')} />);
-    expect(screen.getByLabelText(/invitation code/i)).toBeInTheDocument();
+    expect(screen.getByText(/scan the qr code/i)).toBeInTheDocument();
   });
 
   it('redirects unauthenticated /admin to /admin/login', () => {
@@ -26,38 +29,21 @@ describe('routing', () => {
     expect(screen.getByLabelText(/admin password/i)).toBeInTheDocument();
   });
 
-  it('guards /admin/codes the same way as /admin', () => {
-    vi.spyOn(adminAuth, 'isAuthenticated').mockReturnValue(false);
-    render(<RouterProvider router={testRouter('/admin/codes')} />);
-    expect(screen.getByLabelText(/admin password/i)).toBeInTheDocument();
-  });
-
   it('guards /admin/events the same way as /admin', () => {
     vi.spyOn(adminAuth, 'isAuthenticated').mockReturnValue(false);
     render(<RouterProvider router={testRouter('/admin/events')} />);
     expect(screen.getByLabelText(/admin password/i)).toBeInTheDocument();
   });
 
-  it('renders GuestInvitation at /invitation when given guest state', () => {
-    const router = createMemoryRouter(routes, {
-      initialEntries: [
-        {
-          pathname: '/invitation',
-          state: {
-            event: { name: 'Test Event', eventDate: '2026-09-11T18:00:00.000Z', venue: 'Hangover Lounge' },
-            seatNumber: 3,
-            drinks: [],
-          },
-        },
-      ],
+  it('renders GuestInvitation at /invitation/:tableNumber', async () => {
+    getTableInvitation.mockResolvedValue({
+      active: true,
+      tableNumber: 3,
+      event: { name: 'Test Event', eventDate: '2026-09-11T18:00:00.000Z', venue: 'Hangover Lounge' },
+      drinks: [],
     });
-    render(<RouterProvider router={router} />);
-    expect(screen.getByText('Seat 003')).toBeInTheDocument();
-  });
-
-  it('redirects /invitation to / when no guest state is present', () => {
-    render(<RouterProvider router={testRouter('/invitation')} />);
-    expect(screen.getByLabelText(/invitation code/i)).toBeInTheDocument();
+    render(<RouterProvider router={testRouter('/invitation/3')} />);
+    expect(await screen.findByText('Table 003')).toBeInTheDocument();
   });
 
   it('renders a not-found page for an unknown path', () => {
