@@ -1,6 +1,5 @@
 import { connectDb, disconnectDb } from '../config/db.js';
 import { Event } from '../models/Event.js';
-import { createSeatPool, createCodes, generateUniqueCodes } from '../services/eventSetup.service.js';
 import { Drink } from '../models/Drink.js';
 
 const DRINKS = [
@@ -23,11 +22,8 @@ async function main() {
     venue: 'Hangover Lounge, beside Chaise World Hotel, Umuahia, Abia State',
     isActive: true,
   });
-  await createSeatPool(event._id, 100);
-  const codes = generateUniqueCodes(100);
-  await createCodes(event._id, codes);
   await Drink.insertMany(DRINKS.map((d, i) => ({ ...d, event: event._id, order: i })));
-  console.log(`Seeded event ${event._id} with 100 codes/seats and ${DRINKS.length} drinks.`);
+  console.log(`Seeded event ${event._id} with ${DRINKS.length} drinks.`);
   await disconnectDb();
 }
 

@@ -7,8 +7,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "vitest run",
-    "seed": "node src/scripts/seed.js",
-    "regenerate-codes": "node src/scripts/regenerateCodes.js"
+    "seed": "node src/scripts/seed.js"
   },
   "dependencies": {
     "express": "^4.19.2",

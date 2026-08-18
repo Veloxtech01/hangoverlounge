@@ -15,7 +15,7 @@ async function adminToken(app) {
 }
 
 describe('Admin events API', () => {
-  it('creates an event with a 100-seat pool and 100 auto-generated 6-digit codes', async () => {
+  it('creates an event', async () => {
     const app = createApp();
     const token = await adminToken(app);
     const res = await request(app)
@@ -27,38 +27,11 @@ describe('Admin events API', () => {
         venue: 'Hangover Lounge, Umuahia',
       });
     expect(res.status).toBe(201);
-    expect(res.body.codes).toHaveLength(100);
-    expect(new Set(res.body.codes).size).toBe(100);
-    for (const code of res.body.codes) {
-      expect(code).toMatch(/^\d{6}$/);
-    }
+    expect(res.body.id).toBeTruthy();
 
-    const seatsRes = await request(app)
-      .get(`/api/admin/events/${res.body.id}/seats`)
-      .set('Authorization', `Bearer ${token}`);
-    expect(seatsRes.body).toHaveLength(100);
-    expect(seatsRes.body.every((s) => s.status === 'available')).toBe(true);
-  });
-
-  it('generates a custom code count when codeCount is given', async () => {
-    const app = createApp();
-    const token = await adminToken(app);
-    const res = await request(app)
-      .post('/api/admin/events')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Small Event', eventDate: new Date(), venue: 'V', codeCount: 10 });
-    expect(res.status).toBe(201);
-    expect(res.body.codes).toHaveLength(10);
-  });
-
-  it('rejects a codeCount that is not a positive integer', async () => {
-    const app = createApp();
-    const token = await adminToken(app);
-    const res = await request(app)
-      .post('/api/admin/events')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'X', eventDate: new Date(), venue: 'V', codeCount: 0 });
-    expect(res.status).toBe(400);
+    const created = await Event.findById(res.body.id);
+    expect(created.name).toBe('One Year Anniversary');
+    expect(created.isActive).toBe(false);
   });
 
   it('activating one event deactivates all others', async () => {

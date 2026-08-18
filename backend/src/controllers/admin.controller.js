@@ -1,23 +1,11 @@
 import { Event } from '../models/Event.js';
-import { Seat } from '../models/Seat.js';
-import { Code } from '../models/Code.js';
-import { createSeatPool, createCodes, generateUniqueCodes } from '../services/eventSetup.service.js';
-import { unassignSeat as unassignSeatService } from '../services/seatAssignment.service.js';
 import { ApiError } from '../middleware/errorHandler.js';
-
-const DEFAULT_CODE_COUNT = 100;
 
 export async function createEvent(req, res, next) {
   try {
-    const { name, tagline, eventDate, venue, codeCount = DEFAULT_CODE_COUNT } = req.body;
-    if (!Number.isInteger(codeCount) || codeCount < 1) {
-      throw new ApiError(400, 'INVALID_CODE_COUNT', 'codeCount must be a positive integer.');
-    }
+    const { name, tagline, eventDate, venue } = req.body;
     const event = await Event.create({ name, tagline, eventDate, venue, isActive: false });
-    await createSeatPool(event._id, 100);
-    const codes = generateUniqueCodes(codeCount);
-    await createCodes(event._id, codes);
-    res.status(201).json({ id: event._id, codes });
+    res.status(201).json({ id: event._id });
   } catch (err) {
     next(err);
   }
@@ -40,47 +28,6 @@ export async function listEvents(req, res, next) {
   try {
     const events = await Event.find().sort({ createdAt: -1 });
     res.json(events);
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function seatStatus(req, res, next) {
-  try {
-    const seats = await Seat.find({ event: req.params.eventId })
-      .sort({ seatNumber: 1 })
-      .populate('code', 'code');
-    res.json(seats.map((s) => ({
-      seatNumber: s.seatNumber,
-      status: s.status,
-      code: s.code?.code || null,
-    })));
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function unassignSeat(req, res, next) {
-  try {
-    const seatNumber = Number(req.params.seatNumber);
-    if (!Number.isInteger(seatNumber) || seatNumber < 1 || seatNumber > 100) {
-      throw new ApiError(400, 'INVALID_SEAT_NUMBER', 'seatNumber must be an integer between 1 and 100.');
-    }
-    const result = await unassignSeatService(req.params.eventId, seatNumber);
-    res.json({ seatNumber: result.seatNumber, status: 'available' });
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function listCodes(req, res, next) {
-  try {
-    const codes = await Code.find({ event: req.params.eventId }).sort({ code: 1 });
-    res.json(codes.map((c) => ({
-      code: c.code,
-      seatNumber: c.seatNumber,
-      redeemedAt: c.assignedAt,
-    })));
   } catch (err) {
     next(err);
   }
