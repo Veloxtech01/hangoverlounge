@@ -4,8 +4,11 @@ import mongoose from 'mongoose';
 let replSet;
 
 export async function startTestDb() {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
+  replSet = await MongoMemoryReplSet.create({
+    replSet: { count: 1 },
+    binary: { version: '4.4.29' },
+  });
+  await mongoose.connect(replSet.getUri(), { retryWrites: false });
 }
 
 export async function stopTestDb() {

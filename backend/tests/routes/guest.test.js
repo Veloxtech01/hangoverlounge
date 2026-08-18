@@ -4,7 +4,6 @@ import { startTestDb, stopTestDb, clearTestDb } from '../helpers/db.js';
 import { createApp } from '../../src/app.js';
 import { Event } from '../../src/models/Event.js';
 import { Drink } from '../../src/models/Drink.js';
-import { createSeatPool, createCodes } from '../../src/services/eventSetup.service.js';
 
 beforeAll(startTestDb, 30000);
 afterAll(stopTestDb);
@@ -14,44 +13,48 @@ async function seedActiveEvent() {
   const event = await Event.create({
     name: 'One Year Anniversary', eventDate: new Date(), venue: 'Hangover Lounge', isActive: true,
   });
-  await createSeatPool(event._id, 5);
-  await createCodes(event._id, ['GOOD1']);
   await Drink.create({ event: event._id, category: 'Whisky', name: 'Glenfiddich 18 Years', price: 300000, order: 0 });
   return event;
 }
 
-describe('POST /api/guest/redeem', () => {
-  it('assigns a seat and returns event + drinks for a valid code', async () => {
+describe('GET /api/guest/table/:tableNumber', () => {
+  it('returns event + drinks for a valid table when an event is active', async () => {
     await seedActiveEvent();
     const app = createApp();
-    const res = await request(app).post('/api/guest/redeem').send({ code: 'good1' });
+    const res = await request(app).get('/api/guest/table/7');
     expect(res.status).toBe(200);
-    expect(res.body.seatNumber).toBe(1);
-    expect(res.body.event.name).toBe('One Year Anniversary');
-    expect(res.body.drinks).toHaveLength(1);
+    expect(res.body).toEqual({
+      active: true,
+      tableNumber: 7,
+      event: { name: 'One Year Anniversary', tagline: '', eventDate: expect.any(String), venue: 'Hangover Lounge' },
+      drinks: [{ category: 'Whisky', name: 'Glenfiddich 18 Years', price: 300000 }],
+    });
   });
 
-  it('returns 404 CODE_NOT_FOUND for an unknown code', async () => {
-    await seedActiveEvent();
+  it('returns { active: false } when no event is active', async () => {
     const app = createApp();
-    const res = await request(app).post('/api/guest/redeem').send({ code: 'NOPE' });
-    expect(res.status).toBe(404);
-    expect(res.body.error.code).toBe('CODE_NOT_FOUND');
+    const res = await request(app).get('/api/guest/table/7');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ active: false });
   });
 
-  it('returns 400 CODE_REQUIRED when code is missing', async () => {
-    await seedActiveEvent();
+  it('returns 400 INVALID_TABLE_NUMBER for a table number above MAX_TABLES', async () => {
     const app = createApp();
-    const res = await request(app).post('/api/guest/redeem').send({});
+    const res = await request(app).get('/api/guest/table/9999');
     expect(res.status).toBe(400);
-    expect(res.body.error.code).toBe('CODE_REQUIRED');
+    expect(res.body.error.code).toBe('INVALID_TABLE_NUMBER');
   });
 
-  it('returns 503 NO_ACTIVE_EVENT when no event is active', async () => {
+  it('returns 400 INVALID_TABLE_NUMBER for a non-numeric table number', async () => {
     const app = createApp();
-    const res = await request(app).post('/api/guest/redeem').send({ code: 'ANY' });
-    expect(res.status).toBe(503);
-    expect(res.body.error.code).toBe('NO_ACTIVE_EVENT');
-    expect(res.body.error.message).toBe('No event is open for check-in right now.');
+    const res = await request(app).get('/api/guest/table/abc');
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('INVALID_TABLE_NUMBER');
+  });
+
+  it('returns 400 INVALID_TABLE_NUMBER for table 0', async () => {
+    const app = createApp();
+    const res = await request(app).get('/api/guest/table/0');
+    expect(res.status).toBe(400);
   });
 });
