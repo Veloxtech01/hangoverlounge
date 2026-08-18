@@ -1,5 +1,7 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { getTableInvitation } from "../lib/guestApi.js";
 
 const MotionCard = motion.div;
 
@@ -28,15 +30,55 @@ function formatEventDate(value) {
   });
 }
 
-export default function GuestInvitation() {
-  const { state } = useLocation();
+function HoldingScreen({ message }) {
+  return (
+    <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-black px-6 py-12 text-center">
+      <p className="text-sm font-semibold tracking-[0.2em] text-gold [text-shadow:0_0_18px_rgba(250,208,100,0.4)]">
+        HANGOVER LOUNGE
+      </p>
+      <p className="max-w-xs text-sm text-text-muted">{message}</p>
+    </div>
+  );
+}
 
-  if (!state) {
-    return <Navigate to="/" replace />;
+export default function GuestInvitation() {
+  const { tableNumber } = useParams();
+  const [status, setStatus] = useState("loading");
+  const [payload, setPayload] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("loading");
+    getTableInvitation(tableNumber)
+      .then((data) => {
+        if (cancelled) return;
+        if (data.active) {
+          setPayload(data);
+          setStatus("ready");
+        } else {
+          setStatus("inactive");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("invalid");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tableNumber]);
+
+  if (status === "loading") {
+    return <HoldingScreen message="Loading your invitation…" />;
+  }
+  if (status === "invalid") {
+    return <HoldingScreen message="This table number isn't recognized." />;
+  }
+  if (status === "inactive") {
+    return <HoldingScreen message="No event right now — check back soon." />;
   }
 
-  const { event, seatNumber, drinks } = state;
-  const seatLabel = String(seatNumber).padStart(3, "0");
+  const { event, tableNumber: table, drinks } = payload;
+  const tableLabel = String(table).padStart(3, "0");
   const formattedDate = formatEventDate(event.eventDate);
 
   return (
@@ -106,7 +148,7 @@ export default function GuestInvitation() {
               Your Table
             </p>
             <p className="text-5xl font-bold tracking-widest text-pink [text-shadow:0_0_30px_rgba(253,46,134,0.5)]">
-              Table {seatLabel}
+              Table {tableLabel}
             </p>
           </div>
 

@@ -1,39 +1,50 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import GuestInvitation from './GuestInvitation.jsx';
+import { getTableInvitation } from '../lib/guestApi.js';
 
-const sampleState = {
-  event: { name: 'One Year Anniversary', tagline: 'Liquid Therapy', eventDate: '2026-09-11T18:00:00.000Z', venue: 'Hangover Lounge' },
-  seatNumber: 7,
-  drinks: [{ category: 'Whisky', name: 'Glenfiddich 18 Years', price: 300000 }],
-};
+vi.mock('../lib/guestApi.js', () => ({ getTableInvitation: vi.fn() }));
 
-function renderWithState(state) {
+function renderAtTable(tableNumber) {
   return render(
-    <MemoryRouter initialEntries={[{ pathname: '/invitation', state }]}>
+    <MemoryRouter initialEntries={[`/invitation/${tableNumber}`]}>
       <Routes>
-        <Route path="/invitation" element={<GuestInvitation />} />
-        <Route path="/" element={<div>Entry Page</div>} />
+        <Route path="/invitation/:tableNumber" element={<GuestInvitation />} />
       </Routes>
     </MemoryRouter>
   );
 }
 
 describe('GuestInvitation', () => {
-  it('renders seat number padded to 3 digits and drinks', () => {
-    renderWithState(sampleState);
-    expect(screen.getByText('Seat 007')).toBeInTheDocument();
+  it('fetches by the table number in the URL and renders the invitation', async () => {
+    getTableInvitation.mockResolvedValue({
+      active: true,
+      tableNumber: 7,
+      event: {
+        name: 'One Year Anniversary',
+        tagline: 'Liquid Therapy',
+        eventDate: '2026-09-11T18:00:00.000Z',
+        venue: 'Hangover Lounge',
+      },
+      drinks: [{ category: 'Whisky', name: 'Glenfiddich 18 Years', price: 300000 }],
+    });
+    renderAtTable(7);
+    expect(await screen.findByText('Table 007')).toBeInTheDocument();
     expect(screen.getByText(/Glenfiddich 18 Years/)).toBeInTheDocument();
+    expect(getTableInvitation).toHaveBeenCalledWith('7');
   });
 
-  it('includes the event time-of-day alongside the date', () => {
-    renderWithState(sampleState);
-    expect(screen.getByText(/\d{1,2}:\d{2}\s?(AM|PM)/i)).toBeInTheDocument();
+  it('shows a holding screen without a table number when no event is active', async () => {
+    getTableInvitation.mockResolvedValue({ active: false });
+    renderAtTable(12);
+    expect(await screen.findByText(/no event right now/i)).toBeInTheDocument();
+    expect(screen.queryByText(/table 012/i)).not.toBeInTheDocument();
   });
 
-  it('redirects to entry when no state is present', () => {
-    renderWithState(undefined);
-    expect(screen.getByText('Entry Page')).toBeInTheDocument();
+  it('shows a not-recognized message when the table number is invalid', async () => {
+    getTableInvitation.mockRejectedValue({ response: { status: 400 } });
+    renderAtTable(9999);
+    expect(await screen.findByText(/isn't recognized/i)).toBeInTheDocument();
   });
 });
