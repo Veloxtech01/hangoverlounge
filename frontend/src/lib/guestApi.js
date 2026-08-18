@@ -1,6 +1,6 @@
 import { api } from './api.js';
 
-export async function redeemCode(code) {
-  const { data } = await api.post('/api/guest/redeem', { code });
+export async function getTableInvitation(tableNumber) {
+  const { data } = await api.get(`/api/guest/table/${tableNumber}`);
   return data;
 }
