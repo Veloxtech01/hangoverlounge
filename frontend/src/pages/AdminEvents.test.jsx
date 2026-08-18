@@ -37,7 +37,7 @@ describe('AdminEvents', () => {
 
   it('creates an event via the form', async () => {
     listEvents.mockResolvedValue([]);
-    createEvent.mockResolvedValue({ id: 'evt3', codes: Array(100).fill('000000') });
+    createEvent.mockResolvedValue({ id: 'evt3' });
     renderEvents();
     await waitFor(() => expect(listEvents).toHaveBeenCalled());
 

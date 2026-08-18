@@ -35,13 +35,13 @@ export default function AdminEvents() {
   async function onSubmit(values) {
     setSubmitting(true);
     try {
-      const result = await createEvent({
+      await createEvent({
         name: values.name,
         tagline: values.tagline || undefined,
         eventDate: `${values.eventDate}:00+01:00`,
         venue: values.venue,
       });
-      toast.success(`Event created with ${result.codes.length} invitation codes.`);
+      toast.success('Event created.');
       reset();
       await loadEvents();
     } catch {
@@ -135,9 +135,6 @@ export default function AdminEvents() {
           >
             {submitting ? 'Creating…' : 'Create event'}
           </button>
-          <p className="text-[11px] text-[#6B5842]">
-            100 unique 6-digit invitation codes are generated automatically.
-          </p>
         </form>
 
         {loading ? (
