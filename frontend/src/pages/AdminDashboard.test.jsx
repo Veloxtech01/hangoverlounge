@@ -3,9 +3,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import AdminDashboard from './AdminDashboard.jsx';
-import { listEvents, getSeats } from '../lib/adminApi.js';
+import { listEvents } from '../lib/adminApi.js';
 
-vi.mock('../lib/adminApi.js', () => ({ listEvents: vi.fn(), getSeats: vi.fn() }));
+vi.mock('../lib/adminApi.js', () => ({ listEvents: vi.fn() }));
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn() } }));
 
 function renderDashboard() {
@@ -17,28 +17,32 @@ function renderDashboard() {
 }
 
 describe('AdminDashboard', () => {
-  it('shows the assigned/total seat count for the active event', async () => {
-    listEvents.mockResolvedValue([{ _id: 'evt1', isActive: true }, { _id: 'evt0', isActive: false }]);
-    getSeats.mockResolvedValue([
-      { seatNumber: 1, status: 'assigned', code: 'HL001' },
-      { seatNumber: 2, status: 'available', code: null },
+  it('shows the active event summary', async () => {
+    listEvents.mockResolvedValue([
+      { _id: 'evt1', name: 'One Year Anniversary', eventDate: '2026-09-11T18:00:00.000Z', venue: 'Hangover Lounge', isActive: true },
+      { _id: 'evt0', name: 'Old Event', isActive: false },
     ]);
     renderDashboard();
-    await waitFor(() => expect(getSeats).toHaveBeenCalledWith('evt1'));
-    expect(await screen.findByText('1 / 2 seats assigned')).toBeInTheDocument();
-  });
-
-  it('stops loading and shows a toast error when fetching seats fails', async () => {
-    listEvents.mockRejectedValue(new Error('network down'));
-    renderDashboard();
-    await waitFor(() => expect(screen.queryByText('Loading seats…')).not.toBeInTheDocument());
-    expect(toast.error).toHaveBeenCalledWith('Failed to load seat status.');
+    expect(await screen.findByText('One Year Anniversary')).toBeInTheDocument();
+    expect(screen.getByText('Hangover Lounge')).toBeInTheDocument();
   });
 
   it('shows a distinct message when there is no active event', async () => {
-    listEvents.mockResolvedValue([{ _id: 'evt0', isActive: false }]);
+    listEvents.mockResolvedValue([{ _id: 'evt0', name: 'Old Event', isActive: false }]);
     renderDashboard();
     expect(await screen.findByText('No active event configured.')).toBeInTheDocument();
-    expect(screen.queryByText(/seats assigned/)).not.toBeInTheDocument();
+  });
+
+  it('always shows a link to Manage Events', async () => {
+    listEvents.mockResolvedValue([]);
+    renderDashboard();
+    await waitFor(() => expect(listEvents).toHaveBeenCalled());
+    expect(screen.getByRole('link', { name: /manage events/i })).toHaveAttribute('href', '/admin/events');
+  });
+
+  it('shows a toast error when fetching events fails', async () => {
+    listEvents.mockRejectedValue(new Error('network down'));
+    renderDashboard();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to load event data.'));
   });
 });
