@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+  /* Backgrounds */
+  --color-bg-primary: #531427;
+  --color-bg-dark: #450e20;
+  --color-bg-secondary: #5f1330;
+  --color-bg-warm: #5b2427;
+
+  /* Brand accents */
+  --color-pink: #fd2e86;
+  --color-gold: #fad064;
+
+  /* Typography */
+  --color-text-primary: #fdfbf8;
+  --color-text-cream: #fae8bf;
+  --color-text-muted: #9b595d;
+
+  /* Utility */
+  --color-black: #0f0e0f;
+}

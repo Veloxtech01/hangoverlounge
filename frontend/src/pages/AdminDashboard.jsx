@@ -16,7 +16,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (eventError) {
-      toast.error('Failed to load seat status.');
+      toast.error('Failed to load table status.');
     }
   }, [eventError]);
 
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
       } catch {
         if (!cancelled) {
           setSeatsError(true);
-          toast.error('Failed to load seat status.');
+          toast.error('Failed to load table status.');
         }
       } finally {
         if (!cancelled) {
@@ -64,17 +64,17 @@ export default function AdminDashboard() {
       setSeats((prev) =>
         prev.map((s) => (s.seatNumber === seatNumber ? { ...s, status: 'available', code: null } : s))
       );
-      toast.success(`Seat ${String(seatNumber).padStart(3, '0')} unassigned.`);
+      toast.success(`Table ${String(seatNumber).padStart(3, '0')} unassigned.`);
     } catch (err) {
       if (err.response?.data?.error?.code === 'SEAT_NOT_ASSIGNED') {
-        toast.error('That seat had already changed — refreshing seat status.');
+        toast.error('That table had already changed — refreshing table status.');
         try {
           setSeats(await getSeats(eventId));
         } catch {
-          toast.error('Failed to refresh seat status.');
+          toast.error('Failed to refresh table status.');
         }
       } else {
-        toast.error('Failed to unassign seat.');
+        toast.error('Failed to unassign table.');
       }
     } finally {
       setUnassigning(null);
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen w-full bg-[#1A1310] px-4 py-8 sm:px-6">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <AdminHeader subtitle="Seat Status" />
+        <AdminHeader subtitle="Table Status" />
 
         {!eventLoading && !hasActiveEvent ? (
           <div className="rounded-2xl border border-[#453626] bg-[#241A15] p-5 text-center text-sm text-[#9C8F80]">
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-lg font-semibold text-[#F0E3CC]">
-                    {assignedCount} / {totalCount} seats assigned
+                    {assignedCount} / {totalCount} tables assigned
                   </p>
                   <span className="text-xs font-medium tracking-wide text-[#9C8F80]">
                     {percentAssigned}%
@@ -124,9 +124,9 @@ export default function AdminDashboard() {
             </div>
 
             {loading ? (
-              <p className="text-center text-sm text-[#9C8F80]">Loading seats…</p>
+              <p className="text-center text-sm text-[#9C8F80]">Loading tables…</p>
             ) : seatsError ? (
-              <p className="text-center text-sm text-[#9C8F80]">Failed to load seat status.</p>
+              <p className="text-center text-sm text-[#9C8F80]">Failed to load table status.</p>
             ) : (
               <SeatGrid seats={seats} onSeatClick={setPendingUnassign} pendingSeatNumber={unassigning} />
             )}
@@ -136,11 +136,11 @@ export default function AdminDashboard() {
 
       <ConfirmDialog
         open={pendingUnassign !== null}
-        title={`Unassign seat ${pendingSeat ? String(pendingSeat.seatNumber).padStart(3, '0') : ''}?`}
+        title={`Unassign table ${pendingSeat ? String(pendingSeat.seatNumber).padStart(3, '0') : ''}?`}
         message={
           pendingSeat?.code
-            ? `This frees seat ${String(pendingSeat.seatNumber).padStart(3, '0')} and lets code ${pendingSeat.code} be redeemed again for a new seat.`
-            : 'This frees the seat so it can be assigned again.'
+            ? `This frees table ${String(pendingSeat.seatNumber).padStart(3, '0')} and lets code ${pendingSeat.code} be redeemed again for a new table.`
+            : 'This frees the table so it can be assigned again.'
         }
         confirmLabel="Unassign"
         onConfirm={handleConfirmUnassign}

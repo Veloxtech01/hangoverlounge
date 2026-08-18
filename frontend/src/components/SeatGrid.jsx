@@ -2,7 +2,7 @@ export default function SeatGrid({ seats, onSeatClick, pendingSeatNumber }) {
   return (
     <div
       role="list"
-      aria-label="Seat status grid"
+      aria-label="Table status grid"
       className="grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-10"
     >
       {seats.map((seat) => {
@@ -41,13 +41,13 @@ export default function SeatGrid({ seats, onSeatClick, pendingSeatNumber }) {
                 type="button"
                 onClick={() => onSeatClick?.(seat.seatNumber)}
                 disabled={isPending}
-                aria-label={`Seat ${label} — assigned. Tap to unassign.`}
+                aria-label={`Table ${label} — assigned. Tap to unassign.`}
                 className={`${tileClasses} cursor-pointer hover:bg-[#54432f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A867]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A1310] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100`}
               >
                 {tileContent}
               </button>
             ) : (
-              <div aria-label={`Seat ${label} — available`} className={tileClasses}>
+              <div aria-label={`Table ${label} — available`} className={tileClasses}>
                 {tileContent}
               </div>
             )}

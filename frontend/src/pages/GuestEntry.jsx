@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { redeemCode } from '../lib/guestApi.js';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import { redeemCode } from "../lib/guestApi.js";
 
 export default function GuestEntry() {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -14,9 +14,11 @@ export default function GuestEntry() {
     setSubmitting(true);
     try {
       const result = await redeemCode(code);
-      navigate('/invitation', { state: result });
+      navigate("/invitation", { state: result });
     } catch (err) {
-      const message = err.response?.data?.error?.message || 'Something went wrong. Try again.';
+      const message =
+        err.response?.data?.error?.message ||
+        "Something went wrong. Try again.";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -84,16 +86,16 @@ export default function GuestEntry() {
             disabled={submitting}
             className="mt-2 w-full cursor-pointer rounded-full border border-[#6B5842] bg-[#453626] px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.2em] text-[#F0E3CC] transition-colors duration-200 hover:bg-[#54432f] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting ? 'Checking…' : 'Enter'}
+            {submitting ? "Checking…" : "Enter"}
           </button>
         </form>
 
-        <Link
+        {/* <Link
           to="/admin/login"
           className="mt-10 text-[10px] uppercase tracking-[0.3em] text-[#6B5842] transition-colors duration-200 hover:text-[#9C8F80]"
         >
           Admin
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

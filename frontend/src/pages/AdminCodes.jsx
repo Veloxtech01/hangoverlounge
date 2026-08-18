@@ -20,6 +20,19 @@ function downloadCodesCsv(codes) {
   URL.revokeObjectURL(url);
 }
 
+function downloadCodesTxt(codes) {
+  const text = codes.map((c) => c.code).join('\n');
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'hangover-lounge-invitation-codes.txt';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminCodes() {
   const { eventId, loading: eventLoading, error: eventError } = useActiveEvent();
   const [codes, setCodes] = useState([]);
@@ -82,14 +95,24 @@ export default function AdminCodes() {
               <p className="text-xs uppercase tracking-[0.2em] text-[#9C8F80]">
                 {codes.length} code{codes.length === 1 ? '' : 's'}
               </p>
-              <button
-                type="button"
-                onClick={() => downloadCodesCsv(codes)}
-                disabled={codes.length === 0}
-                className="cursor-pointer rounded-full border border-[#6B5842] bg-[#453626] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#F0E3CC] transition-colors duration-200 hover:bg-[#54432f] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Download CSV
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadCodesTxt(codes)}
+                  disabled={codes.length === 0}
+                  className="cursor-pointer rounded-full border border-[#6B5842] bg-[#453626] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#F0E3CC] transition-colors duration-200 hover:bg-[#54432f] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Download TXT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadCodesCsv(codes)}
+                  disabled={codes.length === 0}
+                  className="cursor-pointer rounded-full border border-[#6B5842] bg-[#453626] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#F0E3CC] transition-colors duration-200 hover:bg-[#54432f] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Download CSV
+                </button>
+              </div>
             </div>
 
             <div className="rounded-2xl border border-[#453626] bg-[#241A15] p-5">
@@ -108,7 +131,7 @@ export default function AdminCodes() {
                       <div className="flex shrink-0 items-center gap-3">
                         {c.seatNumber ? (
                           <span className="text-xs text-[#9C8F80]">
-                            Seat {String(c.seatNumber).padStart(3, '0')}
+                            Table {String(c.seatNumber).padStart(3, '0')}
                           </span>
                         ) : null}
                         <span
